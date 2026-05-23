@@ -32,7 +32,7 @@ let idCounter = 0;
 // ── Regex patterns (mirrors Rust extract.rs) ──
 const BUYER_HEADING_RE = /Pembeli\s+Barang\s+Kena\s+Pajak\s*\/\s*Penerima\s+Jasa\s+Kena\s+Pajak/is;
 const BUYER_END_RE     = /(?:No\.\s*[Kk]ode|Harga\s+Jual|Dasar\s+Pengenaan\s+Pajak|Jumlah\s+PPN|Penyerahan)/im;
-const NAMA_RE          = /Nama\s*:\s*(?<name>[^\r\n]+)/im;
+const NAMA_RE          = /Nama\s*:\s*(?<name>[^N\r\n]+?)(?:\s+Alamat\s*:|\r?\n|$)/is;
 const INV_RE           = /Referensi:\s*([^\s)\r\n]+)/i;
 const KODE_RE          = /Kode\s+dan\s+Nomor\s+Seri\s+Faktur\s+Pajak\s*:?\s*([0-9]+)/i;
 
