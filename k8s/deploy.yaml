@@ -21,7 +21,7 @@ spec:
         app: coretax-renamer
     spec:
       imagePullSecrets:
-        - name: ghcr-cred
+        - name: ghcr-secret
       containers:
         - name: coretax-renamer
           image: ghcr.io/ilmimris/coretax-renamer-web:latest
