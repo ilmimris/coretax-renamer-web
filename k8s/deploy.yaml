@@ -76,10 +76,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - renamer.mris.dev
+        - coretax.mris.dev
       secretName: coretax-renamer-tls
   rules:
-    - host: renamer.mris.dev
+    - host: coretax.mris.dev
       http:
         paths:
           - path: /
