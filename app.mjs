@@ -93,6 +93,13 @@ function getDelimiter() {
   return v;
 }
 
+
+// ── Analytics helper ──
+function trackEvent(name, data = {}) {
+  if (typeof window === 'undefined') return;
+  window.umami?.track?.(name, data);
+}
+
 // ── Build proposed filename ──
 function buildFilename(info) {
   const d = getDelimiter();
@@ -119,9 +126,11 @@ function buildFilename(info) {
 
 // ── Handle files ──
 async function handleFiles(files) {
+  const selectedCount = files?.length ?? 0;
   const pdfFiles = Array.from(files).filter(f =>
     f.name.toLowerCase().endsWith('.pdf') || f.type === 'application/pdf'
   );
+  trackEvent('files_selected', { selected_count: selectedCount, pdf_count: pdfFiles.length });
   if (!pdfFiles.length) return;
 
   toolbar.style.display = 'flex';
@@ -163,6 +172,7 @@ async function processJob(job) {
 // ── Apply renames (download renamed files) ──
 async function applyAll() {
   const readyJobs = jobs.filter(j => j.status === 'ready');
+  trackEvent('apply_clicked', { ready_jobs: readyJobs.length });
   if (!readyJobs.length) return;
 
   applyBtn.disabled = true;
@@ -178,13 +188,16 @@ async function applyAll() {
       let counter = 2;
       const baseName = finalName.replace(/\.pdf$/i, '');
       const ext = finalName.endsWith('.pdf') ? '.pdf' : '';
+      let hasCollisionSuffix = false;
       while (readyJobs.slice(0, readyJobs.indexOf(job)).some(j => j.proposed === finalName)) {
+        hasCollisionSuffix = true;
         finalName = `${baseName} (${counter})${ext}`;
         counter++;
       }
       job.proposed = finalName;
 
       downloadBlob(blob, finalName);
+      trackEvent('rename_download_completed', { has_collision_suffix: hasCollisionSuffix });
       job.status = 'done';
       job.message = `✓ Downloaded`;
     } catch (err) {
@@ -214,12 +227,14 @@ function downloadBlob(blob, filename) {
 // ── Download all ready as zip ──
 async function downloadAll() {
   const readyJobs = jobs.filter(j => j.status === 'ready');
+  trackEvent('download_all_clicked', { ready_jobs: readyJobs.length });
   if (!readyJobs.length) return;
 
   // Simple sequential download (no zip lib to keep it lightweight)
   for (const job of readyJobs) {
     const blob = await job.file.arrayBuffer().then(buf => new Blob([buf], { type: 'application/pdf' }));
     downloadBlob(blob, job.proposed);
+    trackEvent('download_all_item_completed', { has_collision_suffix: /\s\(\d+\)(?:\.pdf)?$/i.test(job.proposed || '') });
     job.status = 'done';
     job.message = '✓ Downloaded';
     updateRow(job);
@@ -281,6 +296,9 @@ function updateApplyBtn() {
 }
 
 function clearDone() {
+  const doneCount = jobs.filter(j => j.status === 'done').length;
+  const failedCount = jobs.filter(j => j.status === 'failed').length;
+  trackEvent('clear_done_clicked', { done_count: doneCount, failed_count: failedCount });
   jobs = jobs.filter(j => j.status !== 'done' && j.status !== 'failed');
   jobsTbody.innerHTML = '';
   jobs.forEach(j => renderRow(j));
