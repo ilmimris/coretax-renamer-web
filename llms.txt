@@ -1,0 +1,30 @@
+# Coretax Renamer
+
+Coretax Renamer is a privacy-first web application for batch-renaming Coretax Faktur Pajak PDFs.
+
+- URL: /
+- Type: Web application (PWA)
+- Core capability: Extract invoice reference, buyer name, and faktur code from PDF text and generate standardized filenames.
+- Processing: Fully client-side; no document upload required.
+- Offline behavior: Supported after first load via service worker caching.
+
+## Audience
+
+- Finance and tax operations teams handling Coretax-exported PDFs.
+- Users needing deterministic and repeatable PDF filename conventions.
+
+## Key features
+
+1. Batch PDF ingest with drag-and-drop.
+2. Configurable delimiter and filename template placeholders: `{invoice}`, `{name}`, `{kode}`, `{d}`.
+3. Duplicate filename collision handling.
+4. Offline-capable Progressive Web App.
+
+## Privacy and security
+
+- No server-side PDF parsing.
+- File processing remains in the browser runtime.
+
+## Contact / ownership
+
+Managed by me.
