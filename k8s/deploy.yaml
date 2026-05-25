@@ -24,7 +24,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: coretax-renamer
-          image: ghcr.io/ilmimris/coretax-renamer-web:ab9e6bc
+          image: ghcr.io/ilmimris/coretax-renamer-web:a3ba795
           ports:
             - containerPort: 80
               name: http
