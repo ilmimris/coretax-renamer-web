@@ -3,90 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coretax Renamer</title>
-  <link rel="manifest" href="manifest.json?v=b50e7bb5">
+  <title>Coretax Renamer | Offline Faktur Pajak PDF Batch Renamer</title>
+  <meta name="description" content="Coretax Renamer is an offline, client-side tool to batch-rename Coretax Faktur Pajak PDFs using invoice reference, buyer name, and faktur code.">
+  <meta name="keywords" content="Coretax, Faktur Pajak, PDF renamer, batch rename PDF, invoice filename tool, Indonesia tax invoice">
+  <meta name="author" content="me">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <link rel="canonical" href="/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="Coretax Renamer">
+  <meta property="og:title" content="Coretax Renamer | Offline Faktur Pajak PDF Batch Renamer">
+  <meta property="og:description" content="Batch-rename Coretax Faktur Pajak PDFs directly in your browser. No upload, no server processing, works offline.">
+  <meta property="og:url" content="/">
+  <meta property="og:image" content="/icon-512.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Coretax Renamer | Offline Faktur Pajak PDF Batch Renamer">
+  <meta name="twitter:description" content="Rename Coretax Faktur Pajak PDFs offline in bulk with customizable filename templates.">
+  <meta name="twitter:image" content="/icon-512.png">
+
   <meta name="theme-color" content="#1a1a2e">
+  <link rel="manifest" href="manifest.json?v=b50e7bb5">
   <link rel="stylesheet" href="style.css?v=b50e7bb5">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Coretax Renamer",
+    "url": "/",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript; works in modern browsers",
+    "description": "Offline-capable browser app to batch-rename Coretax Faktur Pajak PDFs using extracted invoice text fields.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "me"
+    },
+    "inLanguage": "en"
+  }
+  </script>
 </head>
 <body>
   <div class="app">
     <header>
       <h1>📄 Coretax Renamer</h1>
       <p class="subtitle">Batch-rename Faktur Pajak PDFs — client-side &amp; offline</p>
+      <label for="lang-select" class="small" style="display:inline-flex;gap:8px;align-items:center;">🌐 Language <select id="lang-select"><option value="en">English</option><option value="id">Bahasa Indonesia</option></select></label>
     </header>
 
-    <!-- Settings Panel -->
-    <section class="settings">
-      <details>
-        <summary>⚙️ Settings</summary>
-        <div class="settings-content">
-          <label>
-            Filename delimiter (Phase 0)
-            <select id="delimiter">
-              <option value=" ">Space (default)</option>
-              <option value="_">Underscore</option>
-              <option value="-">Hyphen</option>
-              <option value=".">Dot</option>
-              <option value="custom">Custom…</option>
-            </select>
-          </label>
-          <label id="custom-delimiter-label" style="display:none;">
-            Custom delimiter
-            <input type="text" id="custom-delimiter" maxlength="5" placeholder="e.g. _-_">
-          </label>
-          <label>
-            Filename template
-            <input type="text" id="template" value="{invoice}{d}{name}{d}{kode}" placeholder="{invoice}{d}{name}{d}{kode}">
-            <small>{invoice} = ref, {name} = buyer, {kode} = faktur code, {d} = delimiter</small>
-          </label>
-          <label>
-            <input type="checkbox" id="include-ext" checked>
-            Keep .pdf extension
-          </label>
+    <main>
+      <!-- Settings Panel -->
+      <section class="settings" aria-label="Renaming settings">
+        <details>
+          <summary>⚙️ Settings</summary>
+          <div class="settings-content">
+            <label>
+              Filename delimiter (Phase 0)
+              <select id="delimiter">
+                <option value=" ">Space (default)</option>
+                <option value="_">Underscore</option>
+                <option value="-">Hyphen</option>
+                <option value=".">Dot</option>
+                <option value="custom">Custom…</option>
+              </select>
+            </label>
+            <label id="custom-delimiter-label" style="display:none;">
+              Custom delimiter
+              <input type="text" id="custom-delimiter" maxlength="5" placeholder="e.g. _-_">
+            </label>
+            <label>
+              Filename template
+              <input type="text" id="template" value="{invoice}{d}{name}{d}{kode}" placeholder="{invoice}{d}{name}{d}{kode}">
+              <small>{invoice} = ref, {name} = buyer, {kode} = faktur code, {d} = delimiter</small>
+            </label>
+            <label>
+              <input type="checkbox" id="include-ext" checked>
+              Keep .pdf extension
+            </label>
+          </div>
+        </details>
+      </section>
+
+      <!-- Drop Zone -->
+      <section class="drop-zone" id="drop-zone" aria-label="PDF upload area">
+        <div class="drop-zone-inner">
+          <span class="drop-icon" aria-hidden="true">📥</span>
+          <p><span data-i18n="drop_here">Drop Faktur Pajak PDFs here</span></p>
+          <p class="small" data-i18n="or">or</p>
+          <button id="browse-btn" class="btn"><span data-i18n="browse">Browse PDFs…</span></button>
+          <input type="file" id="file-input" multiple accept=".pdf,application/pdf" hidden>
         </div>
-      </details>
-    </section>
+      </section>
 
-    <!-- Drop Zone -->
-    <section class="drop-zone" id="drop-zone">
-      <div class="drop-zone-inner">
-        <span class="drop-icon">📥</span>
-        <p>Drop Faktur Pajak PDFs here</p>
-        <p class="small">or</p>
-        <button id="browse-btn" class="btn">Browse PDFs…</button>
-        <input type="file" id="file-input" multiple accept=".pdf,application/pdf" hidden>
-      </div>
-    </section>
+      <!-- Toolbar -->
+      <section class="toolbar" id="toolbar" style="display:none;" aria-label="Batch actions">
+        <button id="apply-btn" class="btn btn-primary" disabled><span data-i18n="apply">Apply</span> (0)</button>
+        <button id="clear-btn" class="btn"><span data-i18n="clear">Clear completed</span></button>
+        <button id="download-all-btn" class="btn" disabled>⬇ <span data-i18n="download_all">Download All</span></button>
+        <span class="counter" id="counter"></span>
+      </section>
 
-    <!-- Toolbar -->
-    <section class="toolbar" id="toolbar" style="display:none;">
-      <button id="apply-btn" class="btn btn-primary" disabled>Apply (0)</button>
-      <button id="clear-btn" class="btn">Clear completed</button>
-      <button id="download-all-btn" class="btn" disabled>⬇ Download All</button>
-      <span class="counter" id="counter"></span>
-    </section>
-
-    <!-- Job List -->
-    <section class="job-list" id="job-list">
-      <table id="jobs-table" style="display:none;">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Original filename</th>
-            <th>Status</th>
-            <th>New filename</th>
-            <th>Message</th>
-          </tr>
-        </thead>
-        <tbody id="jobs-tbody"></tbody>
-      </table>
-    </section>
+      <!-- Job List -->
+      <section class="job-list" id="job-list" aria-label="Rename job results">
+        <table id="jobs-table" style="display:none;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Original filename</th>
+              <th>Status</th>
+              <th>New filename</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody id="jobs-tbody"></tbody>
+        </table>
+      </section>
+    </main>
   </div>
 
   <!-- PDF.js from CDN (cached by service worker for offline) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
   <script src="app.mjs" type="module"></script>
   <!-- Umami Analytics -->
-  <script defer src="https://umami.mris.dev/script.js" data-website-id="cd352f20-90d5-495a-8721-50cb4c9a068a"></script>
 </body>
 </html>

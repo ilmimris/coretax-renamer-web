@@ -59,4 +59,15 @@ convert icon.png -resize 512x512 icon-512.png
 
 ## License
 
-Internal tool — SiCepat Ekspres Indonesia.
+Internal tool — owned by me.
+
+
+## SEO & GEO readiness
+
+This app includes technical discoverability enhancements for both classic search engines (SEO) and generative engines (GEO):
+
+- Rich page metadata (title, description, canonical, Open Graph, Twitter Card)
+- Structured data (`WebApplication` schema in JSON-LD)
+- Crawl directives in `robots.txt`
+- Discoverability via `sitemap.xml`
+- LLM-oriented context via `llms.txt`

@@ -24,10 +24,33 @@ const customDelLabel = document.getElementById('custom-delimiter-label');
 const customDelInput = document.getElementById('custom-delimiter');
 const templateInput  = document.getElementById('template');
 const includeExtChk  = document.getElementById('include-ext');
+const langSelect     = document.getElementById('lang-select');
 
 // ── State ──
 let jobs = []; // { id, file, name, status, info, proposed, message, blob }
 let idCounter = 0;
+
+const I18N = {
+  en: {
+    queued:'Queued', parsing:'Parsing…', ready:'Ready', done:'Done', failed:'Failed',
+    downloaded:'✓ Downloaded', processing:'Processing…', apply:'Apply', counter_done:'done', counter_pending:'pending',
+    drop_here:'Drop Faktur Pajak PDFs here', or:'or', browse:'Browse PDFs…', clear:'Clear completed', download_all:'Download All',
+    err_buyer_heading:'Buyer block heading not found', err_buyer_name:'Buyer name (Nama) not found', err_invoice:'Invoice reference (Referensi:) not found', err_kode:'Kode dan Nomor Seri Faktur Pajak not found'
+  },
+  id: {
+    queued:'Antri', parsing:'Memproses…', ready:'Siap', done:'Selesai', failed:'Gagal',
+    downloaded:'✓ Terunduh', processing:'Memproses…', apply:'Terapkan', counter_done:'selesai', counter_pending:'menunggu',
+    drop_here:'Taruh PDF Faktur Pajak di sini', or:'atau', browse:'Pilih PDF…', clear:'Bersihkan yang selesai', download_all:'Unduh Semua',
+    err_buyer_heading:'Bagian pembeli tidak ditemukan', err_buyer_name:'Nama pembeli (Nama) tidak ditemukan', err_invoice:'Referensi invoice tidak ditemukan', err_kode:'Kode dan Nomor Seri Faktur Pajak tidak ditemukan'
+  }
+};
+let currentLang = localStorage.getItem('lang') || 'id';
+function tr(k){return (I18N[currentLang]&&I18N[currentLang][k])||I18N.en[k]||k;}
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=tr(el.dataset.i18n);});
+  updateApplyBtn();updateCounter();jobs.forEach(updateRow);
+}
+
 
 // ── Regex patterns (mirrors Rust extract.rs) ──
 const BUYER_HEADING_RE = /Pembeli\s+Barang\s+Kena\s+Pajak\s*\/\s*Penerima\s+Jasa\s+Kena\s+Pajak/is;
@@ -54,24 +77,24 @@ async function extractText(file) {
 function parseInvoiceInfo(text) {
   // Buyer name
   const headingMatch = BUYER_HEADING_RE.exec(text);
-  if (!headingMatch) throw new Error('Buyer block heading not found');
+  if (!headingMatch) throw new Error(tr('err_buyer_heading'));
 
   const afterHeading = text.slice(headingMatch.index + headingMatch[0].length);
   const endMatch = BUYER_END_RE.exec(afterHeading);
   const buyerSlice = endMatch ? afterHeading.slice(0, endMatch.index) : afterHeading;
 
   const namaMatch = NAMA_RE.exec(buyerSlice);
-  if (!namaMatch) throw new Error('Buyer name (Nama) not found');
+  if (!namaMatch) throw new Error(tr('err_buyer_name'));
   const name = namaMatch[1].trim();
 
   // Invoice reference
   const invMatch = INV_RE.exec(text);
-  if (!invMatch) throw new Error('Invoice reference (Referensi:) not found');
+  if (!invMatch) throw new Error(tr('err_invoice'));
   const invoiceNum = invMatch[1].replace(/\//g, '-');
 
   // Kode Faktur Pajak
   const kodeMatch = KODE_RE.exec(text);
-  if (!kodeMatch) throw new Error('Kode dan Nomor Seri Faktur Pajak not found');
+  if (!kodeMatch) throw new Error(tr('err_kode'));
   const kodeFakturPajak = kodeMatch[1];
 
   return { invoiceNum, name, kodeFakturPajak };
@@ -176,7 +199,7 @@ async function applyAll() {
   if (!readyJobs.length) return;
 
   applyBtn.disabled = true;
-  applyBtn.textContent = 'Processing…';
+  applyBtn.textContent = tr('processing');
 
   for (const job of readyJobs) {
     try {
@@ -199,7 +222,7 @@ async function applyAll() {
       downloadBlob(blob, finalName);
       trackEvent('rename_download_completed', { has_collision_suffix: hasCollisionSuffix });
       job.status = 'done';
-      job.message = `✓ Downloaded`;
+      job.message = tr('downloaded');
     } catch (err) {
       job.status = 'failed';
       job.message = err.message;
@@ -236,7 +259,7 @@ async function downloadAll() {
     downloadBlob(blob, job.proposed);
     trackEvent('download_all_item_completed', { has_collision_suffix: /\s\(\d+\)(?:\.pdf)?$/i.test(job.proposed || '') });
     job.status = 'done';
-    job.message = '✓ Downloaded';
+    job.message = tr('downloaded');
     updateRow(job);
   }
   updateCounter();
@@ -258,11 +281,11 @@ function updateRow(job) {
 function rowHTML(job) {
   const badgeClass = `badge-${job.status}`;
   const statusLabel = {
-    queued:   '<span class="badge badge-queued">Queued</span>',
-    working:  '<span class="spinner"></span> Parsing…',
-    ready:    '<span class="badge badge-ready">Ready</span>',
-    done:     '<span class="badge badge-done">Done</span>',
-    failed:   '<span class="badge badge-failed">Failed</span>',
+    queued:   `<span class="badge badge-queued">${tr('queued')}</span>`,
+    working:  `<span class="spinner"></span> ${tr('parsing')}`,
+    ready:    `<span class="badge badge-ready">${tr('ready')}</span>`,
+    done:     `<span class="badge badge-done">${tr('done')}</span>`,
+    failed:   `<span class="badge badge-failed">${tr('failed')}</span>`,
   }[job.status] || job.status;
 
   return `
@@ -285,13 +308,13 @@ function updateCounter() {
   const total = jobs.length;
   const done  = jobs.filter(j => j.status === 'done').length;
   const working = jobs.filter(j => j.status === 'queued' || j.status === 'working').length;
-  counter.textContent = total ? `${done}/${total} done` + (working ? ' · ' : '') + (working ? `${working} pending` : '') : '';
+  counter.textContent = total ? `${done}/${total} ${tr('counter_done')}` + (working ? ' · ' : '') + (working ? `${working} ${tr('counter_pending')}` : '') : '';
 }
 
 function updateApplyBtn() {
   const ready = jobs.filter(j => j.status === 'ready').length;
   applyBtn.disabled = ready === 0;
-  applyBtn.textContent = `Apply (${ready})`;
+  applyBtn.textContent = `${tr('apply')} (${ready})`;
   downloadAllBtn.disabled = ready === 0;
 }
 
@@ -367,6 +390,17 @@ delimiterSel.addEventListener('change', () => {
     }
   });
 });
+
+
+if (langSelect) {
+  langSelect.value = currentLang;
+  langSelect.addEventListener('change', () => {
+    currentLang = langSelect.value;
+    localStorage.setItem('lang', currentLang);
+    applyI18n();
+  });
+}
+applyI18n();
 
 // ── Service Worker registration ──
 if ('serviceWorker' in navigator) {

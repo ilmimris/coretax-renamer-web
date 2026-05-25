@@ -1,11 +1,16 @@
 {
+  "id": "/",
   "name": "Coretax Renamer",
   "short_name": "Renamer",
-  "description": "Batch-rename Faktur Pajak PDFs exported from Coretax — works offline",
+  "description": "Batch-rename Faktur Pajak PDFs exported from Coretax — works offline with 100% client-side processing",
   "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0f0f1a",
   "theme_color": "#1a1a2e",
+  "categories": ["productivity", "business", "finance"],
+  "lang": "en",
   "icons": [
     {
       "src": "icon-192.png",
